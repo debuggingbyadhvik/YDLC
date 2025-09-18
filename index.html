@@ -4,30 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aishwary Adhvik Sharma - Portfolio</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React -->
     <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-    <!-- Babel for JSX transpilation -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Three.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         body {
             font-family: sans-serif;
             background-color: #0f172a;
+            overflow-x: hidden;
+            min-height: 100vh;
         }
-        .animated-bg {
-            background: linear-gradient(-45deg, #0f172a, #1e293b, #334155, #0f172a);
-            background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
-        }
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
+        
         .card-glow {
             position: relative;
             overflow: hidden;
@@ -50,6 +38,30 @@
             background: -webkit-linear-gradient(#eee, #38bdf8);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+        
+        /* New CSS for the full-screen Spline background */
+        .spline-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        /* Class to ensure content is always on top */
+        .content-wrapper {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Adjust the aside to stick to the top */
+        .lg\:sticky {
+            top: 0;
+            height: 100vh;
         }
     </style>
 </head>
@@ -117,111 +129,13 @@
           </span>
         );
         
-        // --- Live Project Window Component ---
-        const ProjectLiveWindow = ({ projectName }) => {
+        // --- Spline 3D Scene Component ---
+        const SplineScene = () => {
             return (
-                <div className="bg-slate-900 border border-slate-700 rounded-lg overflow-hidden p-4 m-4">
-                    <h3 className="text-xl font-bold text-cyan-400 mb-4">{projectName} Live Window</h3>
-                    <div className="relative w-full aspect-video rounded-md overflow-hidden bg-black flex items-center justify-center">
-                        <img src="http://127.0.0.1:5000/video_feed" alt="Live video feed" className="w-full h-full object-contain" />
-                        <div className="absolute inset-0  text-yellow-400 flex flex-col items-center justify-end text-center p-4">
-                            <p className="mb-4">This tool measures the real-time distance between two detected yellow objects,<br/>similar to the depth-sensing capabilities of an iPhone's LiDAR sensor.</p>
-                        </div>
-                    </div>
-                    <p className="text-sm text-slate-500 mt-4 text-center">Note: This feature requires your local server to be running. See the project's GitHub for instructions.</p>
+                <div className="spline-container">
+                    <iframe src='https://my.spline.design/orb-ILkYoDnHld12x8ZAceDUb5p7/' frameborder='0' width='100%' height='100%'></iframe>
                 </div>
             );
-        };
-
-        // --- 3D Scene Component ---
-        const ThreeJSScene = () => {
-          const mountRef = useRef(null);
-
-          useEffect(() => {
-            if (typeof window.THREE === "undefined" || !mountRef.current) return;
-
-            const { Scene, PerspectiveCamera, WebGLRenderer, TorusKnotGeometry, MeshStandardMaterial, Mesh, AmbientLight, PointLight } = window.THREE;
-
-            // Scene & Camera
-            const scene = new Scene();
-            const camera = new PerspectiveCamera(
-              75,
-              mountRef.current.clientWidth / mountRef.current.clientHeight,
-              0.1,
-              1000
-            );
-            camera.position.z = 5;
-
-            // Renderer
-            const renderer = new WebGLRenderer({ alpha: true, antialias: true });
-            renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
-            mountRef.current.appendChild(renderer.domElement);
-
-            // Torus Knot Object
-            const geometry = new TorusKnotGeometry(1.5, 0.5, 128, 16);
-            const material = new MeshStandardMaterial({
-              color: 0x06b6d4,
-              metalness: 0.8,
-              roughness: 0.3,
-            });
-            const torusKnot = new Mesh(geometry, material);
-            scene.add(torusKnot);
-
-            // Lights
-            scene.add(new AmbientLight(0xffffff, 0.5));
-            const pointLight = new PointLight(0xffffff, 1);
-            pointLight.position.set(5, 5, 5);
-            scene.add(pointLight);
-
-            // Interaction (mouse tracking)
-            let mouseX = 0, mouseY = 0;
-            const handleMouseMove = (e) => {
-              mouseX = (e.clientX / window.innerWidth) * 2 - 1;
-              mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
-            };
-            window.addEventListener("mousemove", handleMouseMove);
-
-            // Resize Handling
-            const handleResize = () => {
-              if (!mountRef.current) return;
-              camera.aspect =
-                mountRef.current.clientWidth / mountRef.current.clientHeight;
-              camera.updateProjectionMatrix();
-              renderer.setSize(
-                mountRef.current.clientWidth,
-                mountRef.current.clientHeight
-              );
-            };
-            window.addEventListener("resize", handleResize);
-
-            // Animation Loop
-            const animate = () => {
-              requestAnimationFrame(animate);
-
-              // Smooth rotation
-              torusKnot.rotation.y += 0.01 + mouseX * 0.01;
-              torusKnot.rotation.x += 0.01 + mouseY * 0.01;
-
-              // Camera follows mouse
-              camera.position.x += (mouseX * 0.5 - camera.position.x) * 0.05;
-              camera.position.y += (mouseY * 0.5 - camera.position.y) * 0.05;
-              camera.lookAt(scene.position);
-
-              renderer.render(scene, camera);
-            };
-            animate();
-
-            // Cleanup
-            return () => {
-              window.removeEventListener("mousemove", handleMouseMove);
-              window.removeEventListener("resize", handleResize);
-              if (mountRef.current && renderer.domElement) {
-                mountRef.current.removeChild(renderer.domElement);
-              }
-            };
-          }, []);
-
-          return <div ref={mountRef} className="absolute inset-0 z-0 opacity-50" />;
         };
 
         // --- AI Modal Component ---
@@ -237,7 +151,6 @@
             </div>
         );
 
-
         // --- Resume Data ---
         const resumeData = {
           name: "Aishwary Adhvik Sharma",
@@ -247,10 +160,9 @@
             email: "adhvikiitg@gmail.com",
             phone: "+(91) 9211 453 755",
             location: "Delhi, India",
-            website: "aishwarysharma.dev",
             linkedin: "https://www.linkedin.com/in/aishwary-sharma-a56b17299/",
             github: "debuggingbyadhvik",
-            resumeUrl: "https://docs.google.com/document/d/1fS4AxpOE3aftkTOEllxSdmkLkLH70Ar3pG6p7tqdnPo/edit?usp=sharing",
+            resumeUrl: "https://docs.google.com/document/d/1O9sgWMntr2M91p_oa3en6NMS9g_wb0rp2Neopuyas68/edit?usp=sharing",
           },
           about: "As a Python Developer with a deep interest in computer vision and artificial intelligence, I enjoy tackling challenging problems and building practical applications. My experience spans from developing real-time object detection systems to creating AI-powered tools that streamline development workflows. I'm proficient in the entire project lifecycle, from conceptualization and algorithm design to implementation and deployment, leveraging a strong foundation in both backend and frontend technologies.",
           skills: [
@@ -268,7 +180,6 @@
               name: "YOLO Distance Calculator",
               description: "A real-time object detection and distance calculation tool. Using the YOLO (You Only Look Once) algorithm, this Python application identifies two specified objects (yellow) in a video stream and calculates the Euclidean distance between their centroids, displaying it live.",
               stack: ["Python", "OpenCV", "YOLO"],
-              repoUrl: "https://github.com/debuggingbyadhvik/YOLO",
               liveDemo: true, // This flag enables the live window
             },
             {
@@ -305,7 +216,7 @@
           };
 
           const callGeminiAPI = async (prompt) => {
-             if (!GEMINI_API_KEY) {
+              if (!GEMINI_API_KEY) {
                 const errorMessage = "Error: Gemini API key is not set.\n\nPlease add your key to the `GEMINI_API_KEY` constant in the code.\n\nYou can get a key for free from Google AI Studio.";
                 console.error(errorMessage);
                 return errorMessage;
@@ -356,7 +267,8 @@
 
           return (
             <React.Fragment>
-              <div className="text-slate-400 min-h-screen font-sans leading-relaxed animated-bg">
+              <SplineScene />
+              <div className="content-wrapper text-slate-400 min-h-screen font-sans leading-relaxed">
                 {isLoading && (<div className="fixed top-4 right-4 z-[60] bg-slate-800 text-white py-2 px-4 rounded-lg shadow-lg flex items-center gap-2"><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>Generating...</div>)}
                 {modalState.isOpen && <AIModal title={modalState.title} content={modalState.content} onClose={() => setModalState({ isOpen: false, title: '', content: '' })} />}
                 
@@ -370,8 +282,7 @@
                   </header>
                   
                   <div className="lg:flex lg:justify-between lg:gap-16">
-                    <aside className="lg:sticky lg:top-0 lg:h-screen lg:w-1/3 py-12 md:py-24 flex flex-col relative">
-                      {typeof window.THREE !== 'undefined' && <ThreeJSScene />}
+                    <aside className="lg:sticky lg:top-0 lg:h-screen lg:w-1/3 py-12 md:py-24 flex flex-col">
                       <div className="relative z-10">
                         <h1 className="text-4xl md:text-5xl font-bold text-slate-200 text-gradient">{resumeData.name}</h1>
                         <h2 className="mt-3 text-lg md:text-xl font-medium text-slate-300">{resumeData.title}</h2>
@@ -401,8 +312,20 @@
                                     <p className="mt-2">{project.description}</p>
                                     <button onClick={() => handleAIProjectDescription(project)} className="mt-4 flex items-center gap-2 text-xs font-semibold text-cyan-300 hover:text-cyan-200 transition-colors z-10 relative"><SparklesIcon className="w-4 h-4" />Enhance Description ✨</button>
                                     <div className="mt-4 flex flex-wrap gap-2">{project.stack.map(tech => <Pill key={tech} text={tech} />)}</div>
+                                    {/* Embed the YOLO live window directly if it's the right project */}
+                                    {project.name === "YOLO Distance Calculator" && (
+                                        <div className="bg-slate-900 border border-slate-700 rounded-lg overflow-hidden p-4 mt-4">
+                                            <h4 className="text-md font-bold text-cyan-400 mb-2">Live Demo</h4>
+                                            <div className="relative w-full aspect-video rounded-md overflow-hidden bg-black flex items-center justify-center">
+                                                <img src="http://127.0.0.1:5000/video_feed" alt="Live video feed" className="w-full h-full object-contain" />
+                                                <div className="absolute inset-0 text-yellow-400 flex flex-col items-center justify-end text-center p-4">
+                                                    <p className="mb-4 text-sm">This tool measures the real-time distance between two detected yellow objects.</p>
+                                                </div>
+                                            </div>
+                                            <p className="text-xs text-slate-500 mt-2 text-center">Note: This feature requires your local server to be running. See the project's GitHub for instructions.</p>
+                                        </div>
+                                    )}
                                 </Card>
-                                {project.liveDemo && <ProjectLiveWindow projectName={project.name} />}
                             </React.Fragment>
                           ))}
                         </div>
